@@ -5,6 +5,8 @@ import java.io.IOException;
 
 import loci.formats.FormatException;
 import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.MinimalTiffReader;
+import loci.formats.in.TiffReader;
 import plugins.nherve.toolbox.genericgrid.ThumbnailException;
 
 public class LociThumbnailProvider extends DefaultCacheAndResizeThumbnailProvider {
@@ -28,7 +30,11 @@ public class LociThumbnailProvider extends DefaultCacheAndResizeThumbnailProvide
 	protected BufferedImage getFirstImage(BrowsedImage cell) throws ThumbnailException {
 		BufferedImageReader reader = null;
 		try {
-			reader = new BufferedImageReader();
+			if (cell.getSuffix().equalsIgnoreCase("TIF") || cell.getSuffix().equalsIgnoreCase("TIFF")) {
+				reader = new BufferedImageReader(new MinimalTiffReader());	
+			} else {
+				reader = new BufferedImageReader();
+			}
 			reader.setId(cell.getFile().getAbsolutePath());
 			return reader.openImage(0);
 		} catch (FormatException e) {
