@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011 Institut Pasteur.
+ * 
+ * This file is part of Image Browser, which is an ICY plugin.
+ * 
+ * Image Browser is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Image Browser is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Image Browser. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package plugins.nherve.browser;
 
 import icy.gui.component.ComponentUtil;
@@ -26,8 +45,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import plugins.nherve.browser.cache.CacheException;
+import plugins.nherve.browser.viewer.ImageViewer;
+import plugins.nherve.toolbox.NherveToolbox;
 import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.GridPanel;
+import plugins.nherve.toolbox.plugin.HelpWindow;
 import plugins.nherve.toolbox.plugin.PluginHelper;
 import plugins.nherve.toolbox.plugin.SingletonPlugin;
 
@@ -42,18 +64,24 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 	private final static String PLUGIN_NAME = "ImageBrowser";
 
-	private final static String PLUGIN_VERSION = "1.0.0";
+	private final static String PLUGIN_VERSION = "1.1.0";
 
 	private final static String FULL_PLUGIN_NAME = PLUGIN_NAME + " V" + PLUGIN_VERSION;
 	private final static String PREFERENCES_NODE = "icy/plugins/nherve/browser/ImageBrowser";
 	private final static String INPUT_PREFERENCES_NODE = PREFERENCES_NODE + "/directory";
+	
+	private static String HELP = "<html>" + "<p align=\"center\"><b>" + FULL_PLUGIN_NAME + "</b></p>" + "<p align=\"center\"><b>" + NherveToolbox.DEV_NAME_HTML + "</b></p>" + "<p align=\"center\"><a href=\"http://www.herve.name/pmwiki.php/Main/ImageBrowser\">Online help is available</a></p>" + "<p align=\"center\"><b>" + NherveToolbox.COPYRIGHT_HTML + "</b></p>" + "<hr/>" + "<p>" + PLUGIN_NAME + NherveToolbox.LICENCE_HTML + "</p>" + "<p>" + NherveToolbox.LICENCE_HTMLLINK + "</p>" + "</html>";
+
+	
 	public final static String NAME_INPUT_DIR = "Browse";
+	
 	private IcyFrame frame;
 
 	private JTextField tfInputDir;
 
 	private JButton btInputDir;
 	private JButton btRefresh;
+	private JButton btHelp;
 	
 //  private JRadioButton rbLoci;
 //	private JRadioButton rbImageIO;
@@ -63,6 +91,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	private JLabel lbCache;
 	
 	private GridPanel<BrowsedImage> igp;
+	private GridCellCollection<BrowsedImage> images;
 	private File workingDirectory;
 
 	private CacheThumbnailProvider provider;
@@ -85,10 +114,17 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 			if (b == btInputDir) {
 				PluginHelper.fileChooser(JFileChooser.DIRECTORIES_ONLY, null, INPUT_PREFERENCES_NODE, "Choose directory to browse", tfInputDir);
+				return;
 			}
 			
 			if (b == btRefresh) {
 				updateDirectoryView();
+				return;
+			}
+			
+			if (b == btHelp) {
+				new HelpWindow(PLUGIN_NAME, HELP, 400, 300, frame);
+				return;
 			}
 			
 			if (b == btClearCache) {
@@ -98,6 +134,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 				} catch (CacheException e1) {
 					e1.printStackTrace();
 				}
+				return;
 			}
 		}
 
@@ -162,7 +199,11 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		String ifp = Preferences.userRoot().node(INPUT_PREFERENCES_NODE).get(PluginHelper.PATH, "");
 		tfInputDir.setText(ifp);
 		ComponentUtil.setFixedHeight(tfInputDir, 25);
-		mainPanel.add(GuiUtil.createLineBoxPanel(/*rbLoci, rbImageIO, Box.createHorizontalGlue(), */cbUseCache, lbCache, btClearCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir));
+		
+		btHelp = new JButton(NherveToolbox.questionIcon);
+		btHelp.addActionListener(this);
+		
+		mainPanel.add(GuiUtil.createLineBoxPanel(/*rbLoci, rbImageIO, Box.createHorizontalGlue(), */cbUseCache, lbCache, btClearCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir, btHelp));
 
 		igp = new GridPanel<BrowsedImage>();
 		mainPanel.add(igp);
@@ -207,23 +248,28 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			Preferences.userRoot().node(INPUT_PREFERENCES_NODE).put(PluginHelper.PATH, workingDirectory.getAbsolutePath());
 			File[] files = workingDirectory.listFiles(new InternalFileFilter());
 			if (files.length > 0) {
-				GridCellCollection<BrowsedImage> images = new GridCellCollection<BrowsedImage>(provider);
+				images = new GridCellCollection<BrowsedImage>(provider);
 				Arrays.sort(files);
 				for (File f : files) {
-					BrowsedImage ig = new BrowsedImage(f);
+					BrowsedImage ig = new BrowsedImage(f, this);
 					images.add(ig);
 				}
-
-				igp.setCells(images);
 			} else {
-				igp.setCells(null);
+				images = null;
 			}
 		} else {
 			tfInputDir.setBackground(Color.RED);
-			igp.setCells(null);
+			images = null;
 		}
+		
+		igp.setCells(images);
 	}
 
+	
+	public void showViewer(BrowsedImage startingWith) {
+		ImageViewer v = new ImageViewer(images, provider);
+		v.startInterface(frame, startingWith);
+	}
 
 
 }

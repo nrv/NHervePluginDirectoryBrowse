@@ -17,24 +17,10 @@
  * along with Image Browser. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package plugins.nherve.browser.cache;
+package plugins.nherve.browser.viewer;
 
-public class CacheException extends Exception {
+import plugins.nherve.browser.BrowsedImage;
 
-	public CacheException() {
-		super();
-	}
-
-	public CacheException(String arg0, Throwable arg1) {
-		super(arg0, arg1);
-	}
-
-	public CacheException(String arg0) {
-		super(arg0);
-	}
-
-	public CacheException(Throwable arg0) {
-		super(arg0);
-	}
-
+public interface ImagePreFetcherListener {
+	public void notifyImageFetched(BrowsedImage image);
 }

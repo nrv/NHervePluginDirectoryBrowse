@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011 Institut Pasteur.
+ * 
+ * This file is part of Image Browser, which is an ICY plugin.
+ * 
+ * Image Browser is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Image Browser is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Image Browser. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package plugins.nherve.browser;
 
 import java.awt.image.BufferedImage;
@@ -53,10 +72,10 @@ public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThum
 		return cache.getSizeInfo();
 	}
 
-	protected abstract BufferedImage getFirstImage(BrowsedImage cell) throws ThumbnailException;
+	public abstract BufferedImage getFullSizeImage(BrowsedImage cell) throws ThumbnailException;
 
 	private BufferedImage getFullImage(BrowsedImage cell) throws ThumbnailException {
-		BufferedImage bi = getFirstImage(cell);
+		BufferedImage bi = getFullSizeImage(cell);
 		return bi;
 	}
 
@@ -75,7 +94,7 @@ public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThum
 	protected abstract BufferedImage getResizedThumbnailFast(BrowsedImage cell) throws ThumbnailException;
 
 	private BufferedImage getResizedThumbnailSlow(BrowsedImage cell) throws ThumbnailException {
-		BufferedImage bi = getFirstImage(cell);
+		BufferedImage bi = getFullSizeImage(cell);
 		if (bi != null) {
 			double ratio = Math.min(preferedSize / bi.getWidth(), preferedSize / bi.getHeight());
 			if (ratio < 0.8) {
