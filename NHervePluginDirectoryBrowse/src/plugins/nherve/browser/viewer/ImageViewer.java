@@ -29,6 +29,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
@@ -43,7 +45,7 @@ import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.SomeStandardThumbnails;
 import plugins.nherve.toolbox.image.toolboxes.SomeImageTools;
 
-public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreFetcherListener, MouseWheelListener, MouseListener {
+public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreFetcherListener, MouseWheelListener, MouseListener, ComponentListener {
 	private class View extends JComponent {
 		private static final long serialVersionUID = 5470900740150032907L;
 
@@ -59,12 +61,16 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 				if (cell.isError()) {
 					SomeStandardThumbnails.paintError(g2, this);
 				} else if (needCacheRedraw && (image != null)) {
-					cache = SomeImageTools.resize(image, getWidth(), getHeight());
+					if ((image.getWidth() <= getWidth()) && (image.getHeight() <= getHeight())) {
+						cache = image;
+					} else {
+						cache = SomeImageTools.resize(image, getWidth(), getHeight());
+					}
 					needCacheRedraw = false;
 				}
 
 				if (cache != null) {
-					g2.drawImage(cache, null, null);
+					g2.drawImage(cache, (getWidth() - cache.getWidth()) / 2, (getHeight() - cache.getHeight()) / 2, null);
 				}
 			}
 		}
@@ -92,8 +98,9 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 		view.addMouseWheelListener(this);
 		view.addMouseListener(this);
 		add(view);
-		
+
 		addFrameListener(this);
+		addComponentListener(this);
 
 		setTitle("ImageViewer");
 		setResizable(true);
@@ -199,6 +206,27 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
+
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent arg0) {
+
+	}
+
+	@Override
+	public void componentMoved(ComponentEvent arg0) {
+
+	}
+
+	@Override
+	public void componentResized(ComponentEvent arg0) {
+		view.needCacheRedraw = true;
+		view.repaint();
+	}
+
+	@Override
+	public void componentShown(ComponentEvent arg0) {
 
 	}
 

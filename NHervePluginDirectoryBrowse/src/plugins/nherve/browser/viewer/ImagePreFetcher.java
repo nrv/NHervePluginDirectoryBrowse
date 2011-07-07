@@ -47,7 +47,6 @@ public class ImagePreFetcher {
 
 		@Override
 		public void run() {
-			System.out.println("Fetcher started !");
 			while (running) {
 				try {
 					BrowsedImage image = queue.take();
@@ -56,11 +55,9 @@ public class ImagePreFetcher {
 					// ignore
 				}
 			}
-			System.out.println("Fetcher stoped !");
 		}
 
 		private void preFetch(BrowsedImage image) {
-			System.out.println("preFetch(" + image + ")");
 			try {
 				BufferedImage bi = provider.getFullSizeImage(image);
 				cache.put(image, bi);
@@ -130,11 +127,14 @@ public class ImagePreFetcher {
 		Map<BrowsedImage, Boolean> toFetchMap = new HashMap<BrowsedImage, Boolean>();
 		List<BrowsedImage> toFetchList = new ArrayList<BrowsedImage>();
 
-		if (forward) {
-			fetchBeginPos = Math.max(firstPos, currentPos - 1);
-			fetchEndPos = Math.min(lastPos, fetchBeginPos + preFetchSize);
-			fetchBeginPos = Math.max(firstPos, fetchEndPos - preFetchSize - 1);
+		int preFetchSize2 = preFetchSize * 2;
 
+		fetchBeginPos = Math.max(firstPos, currentPos - preFetchSize);
+		fetchEndPos = Math.min(lastPos, fetchBeginPos + preFetchSize2);
+		fetchBeginPos = Math.max(firstPos, fetchEndPos - preFetchSize2);
+
+		
+		if (forward) {
 			for (int i = currentPos; i <= fetchEndPos; i++) {
 				BrowsedImage img = images.get(i);
 				toFetchMap.put(img, true);
@@ -146,10 +146,6 @@ public class ImagePreFetcher {
 				toFetchList.add(img);
 			}
 		} else {
-			fetchBeginPos = Math.max(firstPos, currentPos - preFetchSize);
-			fetchEndPos = Math.min(lastPos, fetchBeginPos + preFetchSize + 1);
-			fetchBeginPos = Math.max(firstPos, fetchEndPos - preFetchSize - 1);
-
 			for (int i = currentPos; i >= fetchBeginPos; i--) {
 				BrowsedImage img = images.get(i);
 				toFetchMap.put(img, true);
@@ -161,7 +157,7 @@ public class ImagePreFetcher {
 				toFetchList.add(img);
 			}
 		}
-
+		
 		List<BrowsedImage> toRemoveFromCache = new ArrayList<BrowsedImage>();
 		for (BrowsedImage i : cache.keySet()) {
 			if (toFetchMap.containsKey(i)) {
@@ -189,7 +185,6 @@ public class ImagePreFetcher {
 	}
 
 	public void moveForward() {
-		System.out.println("moveForward()");
 		if (currentPos < lastPos) {
 			currentPos++;
 			updatePosition(true);
@@ -197,7 +192,6 @@ public class ImagePreFetcher {
 	}
 
 	public void moveBackward() {
-		System.out.println("moveBackward()");
 		if (currentPos > firstPos) {
 			currentPos--;
 			updatePosition(false);

@@ -33,8 +33,8 @@ public class BrowsedImage extends GridCell {
 	private String suffix;
 	private ImageBrowser browser;
 
-	public BrowsedImage(File f, ImageBrowser browser) {
-		super(f.getName());
+	public BrowsedImage(File f, File p, ImageBrowser browser) {
+		super(f.getAbsolutePath().substring(p.getAbsolutePath().length() + 1));
 		this.browser = browser;
 		this.file = f;
 		this.suffix = getSuffix(file);

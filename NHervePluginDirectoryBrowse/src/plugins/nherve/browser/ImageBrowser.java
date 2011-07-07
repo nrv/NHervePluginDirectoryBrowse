@@ -31,7 +31,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileFilter;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.swing.Box;
@@ -55,10 +57,16 @@ import plugins.nherve.toolbox.plugin.SingletonPlugin;
 
 public class ImageBrowser extends SingletonPlugin implements ActionListener, DocumentListener {
 	private class InternalFileFilter implements FileFilter {
+		private boolean recurse;
 
+		public InternalFileFilter(boolean recurse) {
+			super();
+			this.recurse = recurse;
+		}
+		
 		@Override
 		public boolean accept(File f) {
-			return provider.isAbleToProvideThumbnailFor(f);
+			return (f.isDirectory() && recurse) || provider.isAbleToProvideThumbnailFor(f);
 		}
 	}
 
@@ -69,8 +77,17 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	private final static String FULL_PLUGIN_NAME = PLUGIN_NAME + " V" + PLUGIN_VERSION;
 	private final static String PREFERENCES_NODE = "icy/plugins/nherve/browser/ImageBrowser";
 	private final static String INPUT_PREFERENCES_NODE = PREFERENCES_NODE + "/directory";
+	private final static String ZOOM = "zoom";
+	//private final static String RECURSIVE = "recursive";
+	private final static String CACHE = "cache";
 	
-	private static String HELP = "<html>" + "<p align=\"center\"><b>" + FULL_PLUGIN_NAME + "</b></p>" + "<p align=\"center\"><b>" + NherveToolbox.DEV_NAME_HTML + "</b></p>" + "<p align=\"center\"><a href=\"http://www.herve.name/pmwiki.php/Main/ImageBrowser\">Online help is available</a></p>" + "<p align=\"center\"><b>" + NherveToolbox.COPYRIGHT_HTML + "</b></p>" + "<hr/>" + "<p>" + PLUGIN_NAME + NherveToolbox.LICENCE_HTML + "</p>" + "<p>" + NherveToolbox.LICENCE_HTMLLINK + "</p>" + "</html>";
+	private static String HELP = "<html>" + "<p align=\"center\"><b>" + FULL_PLUGIN_NAME + "</b></p>" + "<p align=\"center\"><b>" + NherveToolbox.DEV_NAME_HTML + "</b></p>" + "<p align=\"center\"><a href=\"http://www.herve.name/pmwiki.php/Main/ImageBrowser\">Online help is available</a></p>" + "<p align=\"center\"><b>" + NherveToolbox.COPYRIGHT_HTML + "</b></p>" 
+	+ "<hr/>"
+	+ "<p>On any thumbnail displayed, you can either : "
+	+"<ul><li>left click : open the image in Icy</li><li>right click : open the image viewer than allows you to navigate quickly between the directory images with the mouse scroll</li></ul>"
+	+"</p>"
+	+ "<hr/>"
+	+ "<p>" + PLUGIN_NAME + NherveToolbox.LICENCE_HTML + "</p>" + "<p>" + NherveToolbox.LICENCE_HTMLLINK + "</p>" + "</html>";
 
 	
 	public final static String NAME_INPUT_DIR = "Browse";
@@ -87,6 +104,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 //	private JRadioButton rbImageIO;
 	
 	private JCheckBox cbUseCache;
+	private JCheckBox cbRecurse;
 	private JButton btClearCache;
 	private JLabel lbCache;
 	
@@ -123,7 +141,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			}
 			
 			if (b == btHelp) {
-				new HelpWindow(PLUGIN_NAME, HELP, 400, 300, frame);
+				new HelpWindow(PLUGIN_NAME, HELP, 400, 500, frame);
 				return;
 			}
 			
@@ -172,6 +190,10 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		
 		new WindowPositionSaver(frame, PREFERENCES_NODE, new Point(0, 0), new Dimension(400, 400));
 
+		boolean useZoom = Preferences.userRoot().node(PREFERENCES_NODE).getBoolean(ZOOM, false);
+		boolean useCache = Preferences.userRoot().node(PREFERENCES_NODE).getBoolean(CACHE, true);
+		//boolean recursive = Preferences.userRoot().node(PREFERENCES_NODE).getBoolean(RECURSIVE, false);
+		boolean recursive = false;
 		
 //		ButtonGroup bg = new ButtonGroup();
 //		rbLoci = new JRadioButton("Loci");
@@ -192,7 +214,10 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		lbCache = new JLabel(provider.getCacheSizeInfo());
 		
 		cbUseCache = new JCheckBox("Use cache");
-		cbUseCache.setSelected(true);
+		cbUseCache.setSelected(useCache);
+		
+		cbRecurse = new JCheckBox("Recursive");
+		cbRecurse.setSelected(recursive);
 
 		tfInputDir = new JTextField();
 		tfInputDir.setName(NAME_INPUT_DIR);
@@ -203,9 +228,9 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		btHelp = new JButton(NherveToolbox.questionIcon);
 		btHelp.addActionListener(this);
 		
-		mainPanel.add(GuiUtil.createLineBoxPanel(/*rbLoci, rbImageIO, Box.createHorizontalGlue(), */cbUseCache, lbCache, btClearCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir, btHelp));
+		mainPanel.add(GuiUtil.createLineBoxPanel(/*rbLoci, rbImageIO, Box.createHorizontalGlue(), */cbUseCache, lbCache, btClearCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir, cbRecurse, Box.createHorizontalGlue(), btHelp));
 
-		igp = new GridPanel<BrowsedImage>();
+		igp = new GridPanel<BrowsedImage>(useZoom);
 		mainPanel.add(igp);
 
 		frame.setVisible(true);
@@ -221,6 +246,10 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 	@Override
 	public void stopInterface() {
+		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(ZOOM, igp.isZoomOnFocus());
+		//Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(RECURSIVE, cbRecurse.isSelected());
+		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(CACHE, cbUseCache.isSelected());
+		
 		frame.removeAll();
 		frame = null;
 		igp.setCells(null);
@@ -230,6 +259,21 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		provider.close();
 	}
 
+	private List<File> getFiles(File root, boolean recurse) {
+		File[] files = root.listFiles(new InternalFileFilter(recurse));
+		ArrayList<File> result = new ArrayList<File>();
+		
+		for (File f : files) {
+			if (recurse && f.isDirectory()) {
+				result.addAll(getFiles(f, recurse));
+			} else {
+				result.add(f);
+			}
+		}
+		
+		return result;
+	}
+	
 	private void updateDirectoryView() {
 //		if (rbLoci.isSelected()) {
 //			provider = providerLoci;
@@ -242,16 +286,20 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			lbCache.setText(provider.getCacheSizeInfo());
 		}
 		
+		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(ZOOM, igp.isZoomOnFocus());
+		//Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(RECURSIVE, cbRecurse.isSelected());
+		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(CACHE, cbUseCache.isSelected());
+		
 		workingDirectory = new File(tfInputDir.getText());
 		if (workingDirectory.exists() && workingDirectory.isDirectory()) {
 			tfInputDir.setBackground(Color.GREEN);
 			Preferences.userRoot().node(INPUT_PREFERENCES_NODE).put(PluginHelper.PATH, workingDirectory.getAbsolutePath());
-			File[] files = workingDirectory.listFiles(new InternalFileFilter());
-			if (files.length > 0) {
+			List<File> files = getFiles(workingDirectory, cbRecurse.isSelected());
+			if (files.size() > 0) {
 				images = new GridCellCollection<BrowsedImage>(provider);
-				Arrays.sort(files);
+				Collections.sort(files);
 				for (File f : files) {
-					BrowsedImage ig = new BrowsedImage(f, this);
+					BrowsedImage ig = new BrowsedImage(f, workingDirectory, this);
 					images.add(ig);
 				}
 			} else {
