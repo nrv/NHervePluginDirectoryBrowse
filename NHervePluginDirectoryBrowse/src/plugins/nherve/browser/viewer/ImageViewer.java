@@ -76,8 +76,6 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 		}
 	}
 
-	private final static String PREFERENCES_NODE = "icy/plugins/nherve/browser/ImageBrowser/ImageViewer";
-
 	private GridCellCollection<BrowsedImage> images;
 	private View view;
 	private ImagePreFetcher fetcher;
@@ -92,7 +90,7 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 	public void startInterface(IcyFrame parentFrame, BrowsedImage first) {
 		parentFrame.addFrameListener(this);
 
-		new WindowPositionSaver(this, PREFERENCES_NODE, new Point(0, 0), new Dimension(400, 400));
+		new WindowPositionSaver(this, getClass().getName(), new Point(0, 0), new Dimension(400, 400));
 
 		view = new View();
 		view.addMouseWheelListener(this);

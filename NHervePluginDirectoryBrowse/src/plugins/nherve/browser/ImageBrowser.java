@@ -23,6 +23,7 @@ import icy.gui.component.ComponentUtil;
 import icy.gui.frame.IcyFrame;
 import icy.gui.util.GuiUtil;
 import icy.gui.util.WindowPositionSaver;
+import icy.preferences.XMLPreferences;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -34,7 +35,6 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.prefs.Preferences;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -75,10 +75,8 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	private final static String PLUGIN_VERSION = "1.1.0";
 
 	private final static String FULL_PLUGIN_NAME = PLUGIN_NAME + " V" + PLUGIN_VERSION;
-	private final static String PREFERENCES_NODE = "icy/plugins/nherve/browser/ImageBrowser";
-	private final static String INPUT_PREFERENCES_NODE = PREFERENCES_NODE + "/directory";
+	private final static String INPUT_PREFERENCES_NODE = "directory";
 	private final static String ZOOM = "zoom";
-	//private final static String RECURSIVE = "recursive";
 	private final static String CACHE = "cache";
 	
 	private static String HELP = "<html>" + "<p align=\"center\"><b>" + FULL_PLUGIN_NAME + "</b></p>" + "<p align=\"center\"><b>" + NherveToolbox.DEV_NAME_HTML + "</b></p>" + "<p align=\"center\"><a href=\"http://www.herve.name/pmwiki.php/Main/ImageBrowser\">Online help is available</a></p>" + "<p align=\"center\"><b>" + NherveToolbox.COPYRIGHT_HTML + "</b></p>" 
@@ -99,9 +97,6 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	private JButton btInputDir;
 	private JButton btRefresh;
 	private JButton btHelp;
-	
-//  private JRadioButton rbLoci;
-//	private JRadioButton rbImageIO;
 	
 	private JCheckBox cbUseCache;
 	private JCheckBox cbRecurse;
@@ -131,7 +126,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			JButton b = (JButton) o;
 
 			if (b == btInputDir) {
-				PluginHelper.fileChooser(JFileChooser.DIRECTORIES_ONLY, null, INPUT_PREFERENCES_NODE, "Choose directory to browse", tfInputDir);
+				PluginHelper.fileChooser(JFileChooser.DIRECTORIES_ONLY, null, getPreferences().node(INPUT_PREFERENCES_NODE), "Choose directory to browse", tfInputDir);
 				return;
 			}
 			
@@ -187,20 +182,12 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		frame = GuiUtil.generateTitleFrame(FULL_PLUGIN_NAME, mainPanel, new Dimension(400, 100), true, true, true, true);
 		
 		addIcyFrame(frame);
-		
-		new WindowPositionSaver(frame, PREFERENCES_NODE, new Point(0, 0), new Dimension(400, 400));
+		XMLPreferences preferences = getPreferences();
+		new WindowPositionSaver(frame, preferences.absolutePath(), new Point(0, 0), new Dimension(400, 400));
 
-		boolean useZoom = Preferences.userRoot().node(PREFERENCES_NODE).getBoolean(ZOOM, false);
-		boolean useCache = Preferences.userRoot().node(PREFERENCES_NODE).getBoolean(CACHE, true);
-		//boolean recursive = Preferences.userRoot().node(PREFERENCES_NODE).getBoolean(RECURSIVE, false);
+		boolean useZoom = preferences.getBoolean(ZOOM, false);
+		boolean useCache = preferences.getBoolean(CACHE, true);
 		boolean recursive = false;
-		
-//		ButtonGroup bg = new ButtonGroup();
-//		rbLoci = new JRadioButton("Loci");
-//		bg.add(rbLoci);
-//		rbImageIO = new JRadioButton("ImageIO");
-//		bg.add(rbImageIO);
-//		rbLoci.setSelected(true);
 		
 		btRefresh = new JButton("Refresh");
 		btRefresh.addActionListener(this);
@@ -221,14 +208,14 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 		tfInputDir = new JTextField();
 		tfInputDir.setName(NAME_INPUT_DIR);
-		String ifp = Preferences.userRoot().node(INPUT_PREFERENCES_NODE).get(PluginHelper.PATH, "");
+		String ifp = preferences.node(INPUT_PREFERENCES_NODE).get(PluginHelper.PATH, "");
 		tfInputDir.setText(ifp);
 		ComponentUtil.setFixedHeight(tfInputDir, 25);
 		
 		btHelp = new JButton(NherveToolbox.questionIcon);
 		btHelp.addActionListener(this);
 		
-		mainPanel.add(GuiUtil.createLineBoxPanel(/*rbLoci, rbImageIO, Box.createHorizontalGlue(), */cbUseCache, lbCache, btClearCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir, cbRecurse, Box.createHorizontalGlue(), btHelp));
+		mainPanel.add(GuiUtil.createLineBoxPanel(cbUseCache, lbCache, btClearCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir, cbRecurse, Box.createHorizontalGlue(), btHelp));
 
 		igp = new GridPanel<BrowsedImage>(useZoom);
 		mainPanel.add(igp);
@@ -246,16 +233,14 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 	@Override
 	public void stopInterface() {
-		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(ZOOM, igp.isZoomOnFocus());
-		//Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(RECURSIVE, cbRecurse.isSelected());
-		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(CACHE, cbUseCache.isSelected());
+		XMLPreferences preferences = getPreferences();
+		preferences.putBoolean(ZOOM, igp.isZoomOnFocus());
+		preferences.putBoolean(CACHE, cbUseCache.isSelected());
 		
 		frame.removeAll();
 		frame = null;
 		igp.setCells(null);
 		igp = null;
-//		providerImageIO.close();
-//		providerLoci.close();
 		provider.close();
 	}
 
@@ -275,25 +260,21 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	}
 	
 	private void updateDirectoryView() {
-//		if (rbLoci.isSelected()) {
-//			provider = providerLoci;
-//		} else {
-//			provider = providerImageIO;
-//		}
 		provider.setUseCache(cbUseCache.isSelected());
 		
 		if (cbUseCache.isSelected()) {
 			lbCache.setText(provider.getCacheSizeInfo());
 		}
 		
-		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(ZOOM, igp.isZoomOnFocus());
-		//Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(RECURSIVE, cbRecurse.isSelected());
-		Preferences.userRoot().node(PREFERENCES_NODE).putBoolean(CACHE, cbUseCache.isSelected());
+		XMLPreferences preferences = getPreferences();
+		
+		preferences.putBoolean(ZOOM, igp.isZoomOnFocus());
+		preferences.putBoolean(CACHE, cbUseCache.isSelected());
 		
 		workingDirectory = new File(tfInputDir.getText());
 		if (workingDirectory.exists() && workingDirectory.isDirectory()) {
 			tfInputDir.setBackground(Color.GREEN);
-			Preferences.userRoot().node(INPUT_PREFERENCES_NODE).put(PluginHelper.PATH, workingDirectory.getAbsolutePath());
+			preferences.node(INPUT_PREFERENCES_NODE).put(PluginHelper.PATH, workingDirectory.getAbsolutePath());
 			List<File> files = getFiles(workingDirectory, cbRecurse.isSelected());
 			if (files.size() > 0) {
 				images = new GridCellCollection<BrowsedImage>(provider);
