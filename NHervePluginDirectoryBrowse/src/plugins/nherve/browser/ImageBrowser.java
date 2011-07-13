@@ -19,7 +19,6 @@
 
 package plugins.nherve.browser;
 
-import icy.gui.component.ComponentUtil;
 import icy.gui.frame.IcyFrame;
 import icy.gui.util.GuiUtil;
 import icy.gui.util.WindowPositionSaver;
@@ -206,11 +205,15 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		cbRecurse = new JCheckBox("Recursive");
 		cbRecurse.setSelected(recursive);
 
+		Dimension maxDim = new Dimension(65000, 25);
+		Dimension minDim = new Dimension(75, 25);
 		tfInputDir = new JTextField();
+		tfInputDir.setPreferredSize(maxDim);
+		tfInputDir.setMaximumSize(maxDim);
+		tfInputDir.setMinimumSize(minDim);
 		tfInputDir.setName(NAME_INPUT_DIR);
 		String ifp = preferences.node(INPUT_PREFERENCES_NODE).get(PluginHelper.PATH, "");
 		tfInputDir.setText(ifp);
-		ComponentUtil.setFixedHeight(tfInputDir, 25);
 		
 		btHelp = new JButton(NherveToolbox.questionIcon);
 		btHelp.addActionListener(this);
