@@ -126,7 +126,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			JButton b = (JButton) o;
 
 			if (b == btInputDir) {
-				PluginHelper.fileChooser(JFileChooser.DIRECTORIES_ONLY, null, getPreferences().node(INPUT_PREFERENCES_NODE), "Choose directory to browse", tfInputDir);
+				PluginHelper.fileChooser(JFileChooser.DIRECTORIES_ONLY, null, getPreferences().node(INPUT_PREFERENCES_NODE), "Choose directory to browse", tfInputDir, null);
 				return;
 			}
 			
