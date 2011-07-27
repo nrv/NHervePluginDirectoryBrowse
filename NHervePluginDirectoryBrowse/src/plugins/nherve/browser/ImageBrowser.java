@@ -19,14 +19,11 @@
 
 package plugins.nherve.browser;
 
-import icy.gui.frame.IcyFrame;
 import icy.gui.util.GuiUtil;
-import icy.gui.util.WindowPositionSaver;
 import icy.preferences.XMLPreferences;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -69,28 +66,21 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 	}
 
-	private final static String PLUGIN_NAME = "ImageBrowser";
-
-	private final static String PLUGIN_VERSION = "1.1.0";
-
-	private final static String FULL_PLUGIN_NAME = PLUGIN_NAME + " V" + PLUGIN_VERSION;
 	private final static String INPUT_PREFERENCES_NODE = "directory";
 	private final static String ZOOM = "zoom";
 	private final static String CACHE = "cache";
 	
-	private static String HELP = "<html>" + "<p align=\"center\"><b>" + FULL_PLUGIN_NAME + "</b></p>" + "<p align=\"center\"><b>" + NherveToolbox.DEV_NAME_HTML + "</b></p>" + "<p align=\"center\"><a href=\"http://www.herve.name/pmwiki.php/Main/ImageBrowser\">Online help is available</a></p>" + "<p align=\"center\"><b>" + NherveToolbox.COPYRIGHT_HTML + "</b></p>" 
+	private static String HELP = "<html>" + "<p align=\"center\"><b>" + HelpWindow.TAG_FULL_PLUGIN_NAME + "</b></p>" + "<p align=\"center\"><b>" + NherveToolbox.DEV_NAME_HTML + "</b></p>" + "<p align=\"center\"><a href=\"http://www.herve.name/pmwiki.php/Main/ImageBrowser\">Online help is available</a></p>" + "<p align=\"center\"><b>" + NherveToolbox.COPYRIGHT_HTML + "</b></p>" 
 	+ "<hr/>"
 	+ "<p>On any thumbnail displayed, you can either : "
 	+"<ul><li>left click : open the image in Icy</li><li>right click : open the image viewer than allows you to navigate quickly between the directory images with the mouse scroll</li></ul>"
 	+"</p>"
 	+ "<hr/>"
-	+ "<p>" + PLUGIN_NAME + NherveToolbox.LICENCE_HTML + "</p>" + "<p>" + NherveToolbox.LICENCE_HTMLLINK + "</p>" + "</html>";
+	+ "<p>" + HelpWindow.TAG_PLUGIN_NAME + NherveToolbox.LICENCE_HTML + "</p>" + "<p>" + NherveToolbox.LICENCE_HTMLLINK + "</p>" + "</html>";
 
 	
 	public final static String NAME_INPUT_DIR = "Browse";
 	
-	private IcyFrame frame;
-
 	private JTextField tfInputDir;
 
 	private JButton btInputDir;
@@ -135,7 +125,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			}
 			
 			if (b == btHelp) {
-				new HelpWindow(PLUGIN_NAME, HELP, 400, 500, frame);
+				openHelpWindow(HELP, 400, 500);
 				return;
 			}
 			
@@ -153,36 +143,21 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	}
 
 	@Override
+	protected void beforeDisplayInterface(JPanel mainPanel) {
+		super.beforeDisplayInterface(mainPanel);
+		
+		tfInputDir.getDocument().addDocumentListener(this);
+		updateDirectoryView();
+	}
+
+	@Override
 	public void changedUpdate(DocumentEvent e) {
 		updateDirectoryView();
 	}
 
 	@Override
-	public void insertUpdate(DocumentEvent e) {
-		updateDirectoryView();
-	}
-
-	@Override
-	public void removeUpdate(DocumentEvent e) {
-		updateDirectoryView();
-	}
-
-	@Override
-	public void sequenceHasChanged() {
-	}
-
-	@Override
-	public void sequenceWillChange() {
-	}
-
-	@Override
-	public void startInterface() {
-		JPanel mainPanel = GuiUtil.generatePanel();
-		frame = GuiUtil.generateTitleFrame(FULL_PLUGIN_NAME, mainPanel, new Dimension(400, 100), true, true, true, true);
-		
-		addIcyFrame(frame);
+	public void fillInterface(JPanel mainPanel) {
 		XMLPreferences preferences = getPreferences();
-		new WindowPositionSaver(frame, preferences.absolutePath(), new Point(0, 0), new Dimension(400, 400));
 
 		boolean useZoom = preferences.getBoolean(ZOOM, false);
 		boolean useCache = preferences.getBoolean(CACHE, true);
@@ -222,29 +197,11 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 		igp = new GridPanel<BrowsedImage>(useZoom);
 		mainPanel.add(igp);
-
-		frame.setVisible(true);
-		frame.addFrameListener(this);
-		frame.pack();
-		
-
-		tfInputDir.getDocument().addDocumentListener(this);
-		updateDirectoryView();
-
-		frame.requestFocus();
 	}
 
 	@Override
-	public void stopInterface() {
-		XMLPreferences preferences = getPreferences();
-		preferences.putBoolean(ZOOM, igp.isZoomOnFocus());
-		preferences.putBoolean(CACHE, cbUseCache.isSelected());
-		
-		frame.removeAll();
-		frame = null;
-		igp.setCells(null);
-		igp = null;
-		provider.close();
+	public Dimension getDefaultFrameDimension() {
+		return new Dimension(400, 400);
 	}
 
 	private List<File> getFiles(File root, boolean recurse) {
@@ -261,6 +218,41 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		
 		return result;
 	}
+
+	@Override
+	public void insertUpdate(DocumentEvent e) {
+		updateDirectoryView();
+	}
+	
+	@Override
+	public void removeUpdate(DocumentEvent e) {
+		updateDirectoryView();
+	}
+	
+	@Override
+	public void sequenceHasChanged() {
+	}
+
+	@Override
+	public void sequenceWillChange() {
+	}
+
+	public void showViewer(BrowsedImage startingWith) {
+		ImageViewer v = new ImageViewer(images, provider);
+		v.startInterface(getFrame(), startingWith);
+	}
+	
+	@Override
+	public void stopInterface() {
+		XMLPreferences preferences = getPreferences();
+		preferences.putBoolean(ZOOM, igp.isZoomOnFocus());
+		preferences.putBoolean(CACHE, cbUseCache.isSelected());
+		
+		igp.setCells(null);
+		igp = null;
+		provider.close();
+	}
+
 	
 	private void updateDirectoryView() {
 		provider.setUseCache(cbUseCache.isSelected());
@@ -295,12 +287,6 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 		
 		igp.setCells(images);
-	}
-
-	
-	public void showViewer(BrowsedImage startingWith) {
-		ImageViewer v = new ImageViewer(images, provider);
-		v.startInterface(frame, startingWith);
 	}
 
 
