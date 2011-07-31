@@ -22,6 +22,7 @@ package plugins.nherve.browser.cache;
 import java.awt.image.BufferedImage;
 
 public interface ThumbnailCache {
+	long MEGAOCTET = 1024 * 1024;
 	public void store(String s, BufferedImage bi) throws CacheException;
 	public BufferedImage get(String s) throws CacheException;
 	public void clear() throws CacheException;

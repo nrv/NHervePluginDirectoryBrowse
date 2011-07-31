@@ -95,7 +95,7 @@ public class DefaultThumbnailCache implements ThumbnailCache {
 		for (File f : cacheDirectory.listFiles()) {
 			s += f.length();
 		}
-		int mo = (int)(s / (1024 * 1024));
+		int mo = (int)(s / MEGAOCTET);
 		return "("+mo +" Mo)";
 	}
 
