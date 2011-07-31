@@ -26,5 +26,6 @@ public interface ThumbnailCache {
 	public BufferedImage get(String s) throws CacheException;
 	public void clear() throws CacheException;
 	public void init() throws CacheException;
+	public void close() throws CacheException;
 	public String getSizeInfo();
 }

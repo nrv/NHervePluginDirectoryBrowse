@@ -98,4 +98,9 @@ public class DefaultThumbnailCache implements ThumbnailCache {
 		int mo = (int)(s / (1024 * 1024));
 		return "("+mo +" Mo)";
 	}
+
+	@Override
+	public void close() throws CacheException {
+		
+	}
 }
