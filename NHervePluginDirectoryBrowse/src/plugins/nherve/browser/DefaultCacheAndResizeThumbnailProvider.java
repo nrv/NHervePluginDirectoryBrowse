@@ -25,10 +25,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import plugins.nherve.browser.cache.CacheException;
-import plugins.nherve.browser.cache.DefaultThumbnailCache;
 import plugins.nherve.browser.cache.ThumbnailCache;
-import plugins.nherve.toolbox.genericgrid.ThumbnailException;
+import plugins.nherve.browser.cache.ThumbnailCacheFactory;
 import plugins.nherve.toolbox.genericgrid.DefaultThumbnailProvider;
+import plugins.nherve.toolbox.genericgrid.ThumbnailException;
 import plugins.nherve.toolbox.image.toolboxes.SomeImageTools;
 
 public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThumbnailProvider<BrowsedImage> implements CacheThumbnailProvider {
@@ -48,8 +48,7 @@ public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThum
 		populateSuffixes();
 
 		try {
-			cache = new DefaultThumbnailCache("ImageBrowser");
-			cache.init();
+			cache = ThumbnailCacheFactory.getBestCacheAvailable();
 		} catch (CacheException e) {
 			cacheReady = false;
 			e.printStackTrace();
@@ -68,16 +67,22 @@ public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThum
 	}
 
 	@Override
+	protected void finalize() throws Throwable {
+		ThumbnailCacheFactory.close(cache);
+		super.finalize();
+	}
+
+	@Override
 	public String getCacheSizeInfo() {
 		return cache.getSizeInfo();
 	}
-
-	public abstract BufferedImage getFullSizeImage(BrowsedImage cell) throws ThumbnailException;
 
 	private BufferedImage getFullImage(BrowsedImage cell) throws ThumbnailException {
 		BufferedImage bi = getFullSizeImage(cell);
 		return bi;
 	}
+
+	public abstract BufferedImage getFullSizeImage(BrowsedImage cell) throws ThumbnailException;
 
 	public int getPreferedSize() {
 		return preferedSize;
@@ -113,6 +118,7 @@ public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThum
 				try {
 					bi = cache.get(cell.getHashKey());
 					if (bi == null) {
+						log(cache.getClass().getName() + " is missing " + cell.getName());
 						bi = getResizedThumbnail(cell);
 						cache.store(cell.getHashKey(), bi);
 					}

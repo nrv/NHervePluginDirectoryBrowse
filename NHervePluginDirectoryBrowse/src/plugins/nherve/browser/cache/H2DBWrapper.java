@@ -36,13 +36,22 @@ public class H2DBWrapper extends DBWrapper {
 	}
 
 	@Override
-	protected void postDisconnect() throws SQLException {
-		
+	protected void postConnect() throws SQLException {
+		log("[H2DBWrapper] using directory : " + getDbDirectory());
 	}
 	
 	@Override
+	protected void postDisconnect() throws SQLException {
+		
+	}
+
+	@Override
 	protected void preConnect() throws SQLException {
 		
+	}
+
+	@Override
+	protected void preDisconnect() throws SQLException {
 	}
 
 

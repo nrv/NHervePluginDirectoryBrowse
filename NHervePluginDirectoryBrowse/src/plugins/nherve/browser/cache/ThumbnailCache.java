@@ -23,10 +23,10 @@ import java.awt.image.BufferedImage;
 
 public interface ThumbnailCache {
 	long MEGAOCTET = 1024 * 1024;
-	public void store(String s, BufferedImage bi) throws CacheException;
-	public BufferedImage get(String s) throws CacheException;
-	public void clear() throws CacheException;
-	public void init() throws CacheException;
-	public void close() throws CacheException;
-	public String getSizeInfo();
+	void store(String s, BufferedImage bi) throws CacheException;
+	BufferedImage get(String s) throws CacheException;
+	void clear() throws CacheException;
+	void init() throws CacheException;
+	void close() throws CacheException;
+	String getSizeInfo();
 }

@@ -23,10 +23,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 import plugins.nherve.browser.cache.CacheException;
+import plugins.nherve.toolbox.Algorithm;
 import plugins.nherve.toolbox.genericgrid.GridPanel;
 import plugins.nherve.toolbox.genericgrid.ThumbnailException;
 
-public class CombinedThumbnailProvider implements CacheThumbnailProvider {
+public class CombinedThumbnailProvider extends Algorithm implements CacheThumbnailProvider {
 	private CacheThumbnailProvider providerLoci;
 	private CacheThumbnailProvider providerImageIO;
 	
@@ -117,6 +118,19 @@ public class CombinedThumbnailProvider implements CacheThumbnailProvider {
 	@Override
 	public BufferedImage getFullSizeImage(BrowsedImage cell) throws ThumbnailException {
 		return switchCell(cell).getFullSizeImage(cell);
+	}
+
+
+
+	@Override
+	public void setLogEnabled(boolean log) {
+		super.setLogEnabled(log);
+		if (providerImageIO != null) {
+			providerImageIO.setLogEnabled(log);
+		}
+		if (providerLoci != null) {
+			providerLoci.setLogEnabled(log);
+		}
 	}
 
 

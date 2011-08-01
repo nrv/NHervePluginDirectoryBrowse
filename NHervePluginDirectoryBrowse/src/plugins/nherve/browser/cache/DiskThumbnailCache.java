@@ -26,14 +26,15 @@ import java.security.NoSuchAlgorithmException;
 
 import javax.imageio.ImageIO;
 
+import plugins.nherve.toolbox.Algorithm;
 import plugins.nherve.toolbox.HashToolbox;
 
-public class DefaultThumbnailCache implements ThumbnailCache {
+public class DiskThumbnailCache extends Algorithm implements ThumbnailCache {
 	private String name;
 	private File cacheDirectory;
 
-	public DefaultThumbnailCache(String name) {
-		super();
+	DiskThumbnailCache(String name) {
+		super(true);
 
 		this.name = name;
 	}
@@ -50,6 +51,11 @@ public class DefaultThumbnailCache implements ThumbnailCache {
 	}
 
 	@Override
+	public void close() throws CacheException {
+		
+	}
+
+	@Override
 	public BufferedImage get(String s) throws CacheException {
 		File f = cacheFile(s);
 		if (!f.exists()) {
@@ -59,33 +65,8 @@ public class DefaultThumbnailCache implements ThumbnailCache {
 		try {
 			return ImageIO.read(f);
 		} catch (Exception e) {
-			System.err.println("Unable to open cahed file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
+			logError("Unable to open cached file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
 			return null;
-		}
-	}
-
-	@Override
-	public void init() throws CacheException {
-		try {
-			MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e) {
-			throw new CacheException(e);
-		}
-		String dir = System.getProperty("java.io.tmpdir");
-		cacheDirectory = new File(dir + File.separator + name + File.separator);
-
-		cacheDirectory.mkdirs();
-	}
-
-	@Override
-	public void store(String s, BufferedImage bi) throws CacheException {
-		if (bi != null) {
-			File f = cacheFile(s);
-			try {
-				ImageIO.write(bi, "JPG", f);
-			} catch (Exception e) {
-				System.err.println("Unable to write cached file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
-			}
 		}
 	}
 
@@ -100,7 +81,29 @@ public class DefaultThumbnailCache implements ThumbnailCache {
 	}
 
 	@Override
-	public void close() throws CacheException {
+	public void init() throws CacheException {
+		try {
+			MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			throw new CacheException(e);
+		}
+		String dir = System.getProperty("java.io.tmpdir");
+		cacheDirectory = new File(dir + File.separator + name + File.separator);
+
+		cacheDirectory.mkdirs();
 		
+		log("[DiskThumbnailCache] using directory : " + cacheDirectory);
+	}
+
+	@Override
+	public void store(String s, BufferedImage bi) throws CacheException {
+		if (bi != null) {
+			File f = cacheFile(s);
+			try {
+				ImageIO.write(bi, "JPG", f);
+			} catch (Exception e) {
+				logError("Unable to write cached file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
+			}
+		}
 	}
 }

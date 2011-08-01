@@ -29,8 +29,10 @@ import plugins.nherve.browser.CacheThumbnailProvider;
 import plugins.nherve.browser.ImageIOThumbnailProvider;
 import plugins.nherve.browser.cache.CacheException;
 import plugins.nherve.browser.cache.DBThumbnailCache;
-import plugins.nherve.browser.cache.DefaultThumbnailCache;
+import plugins.nherve.browser.cache.DiskThumbnailCache;
 import plugins.nherve.browser.cache.ThumbnailCache;
+import plugins.nherve.browser.cache.DBWrapper.DBType;
+import plugins.nherve.browser.cache.ThumbnailCacheFactory;
 import plugins.nherve.toolbox.genericgrid.ThumbnailException;
 
 public class Perf {
@@ -76,13 +78,13 @@ public class Perf {
 	}
 
 	private ThumbnailCache getDefaultThumbnailCache() throws CacheException {
-		ThumbnailCache cache = new DefaultThumbnailCache("Perf");
+		ThumbnailCache cache = ThumbnailCacheFactory.getDiskCache();
 		cache.init();
 		return cache;
 	}
 
 	private ThumbnailCache getDBThumbnailCache() throws CacheException {
-		ThumbnailCache cache = new DBThumbnailCache();
+		ThumbnailCache cache = new DBThumbnailCache(DBType.H2, "Perf", true);
 		cache.init();
 		return cache;
 	}

@@ -71,14 +71,12 @@ public abstract class DBWrapper extends Algorithm {
 	
 	protected Connection conn;
 	
-	public DBWrapper() {
+	protected DBWrapper() {
 		super();
 	}
 
 	public void connect() throws SQLException {
 		try {
-			log("[DBWrapper] Cache instance : " + getClass().getName());
-			
 			preConnect();
 			
 			Class.forName(getDriver());
@@ -86,11 +84,15 @@ public abstract class DBWrapper extends Algorithm {
 			if (!tableExists()) {
 				tableCreate();
 			}
+			
+			postConnect();
 		} catch (ClassNotFoundException e) {
 			throw new SQLException(e);
 		}
 	}
 	public void disconnect() throws SQLException {
+		preDisconnect();
+		
 		SQLException exceptionOnClose = null;
 		if (conn != null) {
 			try {
@@ -148,9 +150,13 @@ public abstract class DBWrapper extends Algorithm {
 		}
 	}
 
+	protected abstract void preDisconnect() throws SQLException;
+	
 	protected abstract void postDisconnect() throws SQLException;
 
 	protected abstract void preConnect() throws SQLException;
+	
+	protected abstract void postConnect() throws SQLException;
 
 	public BufferedImage select(String h) throws SQLException {
 		PreparedStatement s = null;

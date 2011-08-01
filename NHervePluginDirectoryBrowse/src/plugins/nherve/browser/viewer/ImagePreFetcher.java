@@ -62,8 +62,7 @@ public class ImagePreFetcher {
 				BufferedImage bi = provider.getFullSizeImage(image);
 				cache.put(image, bi);
 			} catch (ThumbnailException e) {
-				image.setError(true);
-				e.printStackTrace();
+				image.setError(e);
 			}
 			notifyListeners(image);
 		}

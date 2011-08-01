@@ -43,10 +43,12 @@ public class BrowsedImage extends GridCell {
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if (e.getButton() == MouseEvent.BUTTON1) {
+			e.consume();
 			Loader.load(file);
 			return;
 		}
 		if (e.getButton() == MouseEvent.BUTTON3) {
+			e.consume();
 			browser.showViewer(this);
 			return;
 		}

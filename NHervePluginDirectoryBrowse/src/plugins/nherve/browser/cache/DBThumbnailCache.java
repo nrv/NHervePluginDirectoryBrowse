@@ -24,13 +24,19 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
-
 import plugins.nherve.browser.cache.DBWrapper.DBType;
+import plugins.nherve.toolbox.Algorithm;
 import plugins.nherve.toolbox.HashToolbox;
 
-public class DBThumbnailCache implements ThumbnailCache {
-
+public class DBThumbnailCache extends Algorithm implements ThumbnailCache {
 	private DBWrapper wrap;
+
+	public DBThumbnailCache(DBType t, String dbName, boolean display) {
+		super(display);
+
+		wrap = DBWrapper.create(t, dbName);
+		wrap.setLogEnabled(display);
+	}
 
 	@Override
 	public void store(String s, BufferedImage bi) throws CacheException {
@@ -44,7 +50,7 @@ public class DBThumbnailCache implements ThumbnailCache {
 	@Override
 	public BufferedImage get(String s) throws CacheException {
 		try {
-			return wrap.select(s);
+			return wrap.select(HashToolbox.hashMD5(s));
 		} catch (SQLException e) {
 			throw new CacheException(e);
 		}
@@ -68,8 +74,6 @@ public class DBThumbnailCache implements ThumbnailCache {
 		}
 
 		try {
-			wrap = DBWrapper.create(DBType.DERBY);
-			wrap.setLogEnabled(true);
 			wrap.connect();
 		} catch (SQLException e) {
 			throw new CacheException(e);
@@ -79,8 +83,8 @@ public class DBThumbnailCache implements ThumbnailCache {
 	@Override
 	public String getSizeInfo() {
 		try {
-			int mo = (int)(wrap.tableSize() / MEGAOCTET);
-			return "("+mo +" Mo)";
+			int mo = (int) (wrap.tableSize() / MEGAOCTET);
+			return "(" + mo + " Mo)";
 		} catch (SQLException e) {
 			return "(not available)";
 		}
@@ -95,6 +99,14 @@ public class DBThumbnailCache implements ThumbnailCache {
 			}
 		} catch (SQLException e) {
 			throw new CacheException(e);
+		}
+	}
+
+	@Override
+	public void setLogEnabled(boolean log) {
+		super.setLogEnabled(log);
+		if (wrap != null) {
+			wrap.setLogEnabled(log);
 		}
 	}
 

@@ -29,8 +29,17 @@ public class DerbyDBWrapper extends DBWrapper {
 	private final static String CLOSEURL = "jdbc:derby:;shutdown=true";
 
 	@Override
-	protected void preConnect() throws SQLException {
-		System.setProperty("derby.system.home", getDbDirectory());
+	protected String getDriver() {
+		return DRIVER;
+	}
+
+	@Override
+	protected String getUrl() {
+		return URL_P1 + getDbName() + URL_P2;
+	}
+
+	@Override
+	protected void postConnect() throws SQLException {
 		log("[DerbyDBWrapper] using directory : " + getDbDirectory());
 	}
 
@@ -46,12 +55,11 @@ public class DerbyDBWrapper extends DBWrapper {
 	}
 
 	@Override
-	protected String getDriver() {
-		return DRIVER;
+	protected void preConnect() throws SQLException {
+		System.setProperty("derby.system.home", getDbDirectory());
 	}
 
 	@Override
-	protected String getUrl() {
-		return URL_P1 + getDbName() + URL_P2;
+	protected void preDisconnect() throws SQLException {
 	}
 }
