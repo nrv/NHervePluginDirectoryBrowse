@@ -19,6 +19,7 @@
 
 package plugins.nherve.browser;
 
+import icy.gui.frame.IcyFrameEvent;
 import icy.gui.util.GuiUtil;
 import icy.preferences.XMLPreferences;
 
@@ -44,6 +45,7 @@ import javax.swing.event.DocumentListener;
 
 import plugins.nherve.browser.cache.CacheException;
 import plugins.nherve.browser.viewer.ImageViewer;
+import plugins.nherve.browser.viewer.ImageViewerParent;
 import plugins.nherve.toolbox.NherveToolbox;
 import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.GridPanel;
@@ -51,7 +53,7 @@ import plugins.nherve.toolbox.plugin.HelpWindow;
 import plugins.nherve.toolbox.plugin.PluginHelper;
 import plugins.nherve.toolbox.plugin.SingletonPlugin;
 
-public class ImageBrowser extends SingletonPlugin implements ActionListener, DocumentListener {
+public class ImageBrowser extends SingletonPlugin implements ActionListener, DocumentListener, ImageViewerParent {
 	private class InternalFileFilter implements FileFilter {
 		private boolean recurse;
 
@@ -65,6 +67,8 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			return (f.isDirectory() && recurse) || provider.isAbleToProvideThumbnailFor(f);
 		}
 	}
+
+	private final static String VERSION = "1.2.1.0";
 
 	private final static String INPUT_PREFERENCES_NODE = "directory";
 	private final static String ZOOM = "zoom";
@@ -90,11 +94,12 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	private File workingDirectory;
 
 	private CacheThumbnailProvider provider;
+	private ImageViewer viewer;
 
 	public ImageBrowser() {
 		super();
 		provider = new CombinedThumbnailProvider(true, GridPanel.DEFAULT_CELL_LENGTH * (int) GridPanel.DEFAULT_MAX_ZOOM_FACTOR);
-		//provider.setLogEnabled(true);
+		// provider.setLogEnabled(true);
 	}
 
 	@Override
@@ -204,7 +209,12 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 	@Override
 	public Dimension getDefaultFrameDimension() {
-		return new Dimension(400, 400);
+		return new Dimension(600, 400);
+	}
+
+	@Override
+	public String getDefaultVersion() {
+		return VERSION;
 	}
 
 	private List<File> getFiles(File root, boolean recurse) {
@@ -223,6 +233,15 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	}
 
 	@Override
+	public void icyFrameClosed(IcyFrameEvent e) {
+		if (e.getFrame() == viewer) {
+			viewer = null;
+		} else {
+			super.icyFrameClosed(e);
+		}
+	}
+
+	@Override
 	public void insertUpdate(DocumentEvent e) {
 		updateDirectoryView();
 	}
@@ -230,6 +249,10 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	@Override
 	public void removeUpdate(DocumentEvent e) {
 		updateDirectoryView();
+	}
+
+	public void removeViewer() {
+		viewer = null;
 	}
 
 	@Override
@@ -240,9 +263,14 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	public void sequenceWillChange() {
 	}
 
-	public void showViewer(BrowsedImage startingWith) {
-		ImageViewer v = new ImageViewer(images, provider);
-		v.startInterface(getFrame(), startingWith);
+	public void showViewer(BrowsedImage current) {
+		if (viewer == null) {
+			viewer = new ImageViewer(images, provider, this);
+			viewer.addFrameListener(this);
+			viewer.startInterface(getFrame(), current);
+		} else {
+			viewer.jumpTo(current);
+		}
 	}
 
 	@Override
@@ -251,12 +279,17 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		preferences.putBoolean(ZOOM, igp.isZoomOnFocus());
 		preferences.putBoolean(CACHE, cbUseCache.isSelected());
 
+		if (viewer != null) {
+			viewer.close();
+		}
+		
 		igp.setCells(null);
 		igp = null;
 		provider.close();
 	}
 
 	private void updateDirectoryView() {
+		
 		provider.setUseCache(cbUseCache.isSelected());
 
 		if (cbUseCache.isSelected()) {
@@ -272,7 +305,9 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		if (workingDirectory.exists() && workingDirectory.isDirectory()) {
 			tfInputDir.setBackground(Color.GREEN);
 			preferences.node(INPUT_PREFERENCES_NODE).put(PluginHelper.PATH, workingDirectory.getAbsolutePath());
+			enableWaitingCursor();
 			List<File> files = getFiles(workingDirectory, cbRecurse.isSelected());
+			disableWaitingCursor();
 			if (files.size() > 0) {
 				images = new GridCellCollection<BrowsedImage>(provider);
 				Collections.sort(files);
@@ -289,6 +324,10 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 
 		igp.setCells(images);
+		
+		if (viewer != null) {
+			viewer.close();
+		}
 	}
 
 }

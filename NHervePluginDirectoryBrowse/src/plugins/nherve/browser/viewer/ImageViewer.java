@@ -44,6 +44,7 @@ import plugins.nherve.browser.CacheThumbnailProvider;
 import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.SomeStandardThumbnails;
 import plugins.nherve.toolbox.image.toolboxes.SomeImageTools;
+import plugins.nherve.toolbox.plugin.MyFrame;
 
 public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreFetcherListener, MouseWheelListener, MouseListener, ComponentListener {
 	private class View extends JComponent {
@@ -76,21 +77,27 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 		}
 	}
 
-	private GridCellCollection<BrowsedImage> images;
 	private View view;
 	private ImagePreFetcher fetcher;
+	private ImageViewerParent parent;
 
-	public ImageViewer(GridCellCollection<BrowsedImage> images, CacheThumbnailProvider provider) {
+	public ImageViewer(GridCellCollection<BrowsedImage> images, CacheThumbnailProvider provider, ImageViewerParent parent) {
 		super();
 
-		this.images = images;
+		this.parent = parent;
 		this.fetcher = new ImagePreFetcher(images, 5, provider);
 	}
+	
+	public void jumpTo(BrowsedImage current) {
+		fetcher.start(current);
+		show(fetcher.getCurrent());
+	}
 
-	public void startInterface(IcyFrame parentFrame, BrowsedImage first) {
+	public void startInterface(MyFrame parentFrame, BrowsedImage first) {
 		parentFrame.addFrameListener(this);
-
-		new WindowPositionSaver(this, getClass().getName(), new Point(0, 0), new Dimension(400, 400));
+		
+		addToMainDesktopPane();
+		
 
 		view = new View();
 		view.addMouseWheelListener(this);
@@ -103,13 +110,23 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 		setTitle("ImageViewer");
 		setResizable(true);
 		setClosable(true);
+		
+		if (parent.isRunningHeadless()) {
+			externalize();
+		}
+		
+		new WindowPositionSaver(this, getClass().getName(), new Point(0, 0), new Dimension(400, 400));
+
+		if (parent.isRunningHeadless()) {
+			externalize();
+		}
+		
 		setVisible(true);
-		center();
-		addToMainDesktopPane();
 		requestFocus();
 
 		fetcher.addListener(this);
-		fetcher.start(first);
+		
+		jumpTo(first);
 	}
 
 	@Override
@@ -124,8 +141,6 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 	public void icyFrameClosed(IcyFrameEvent e) {
 		if (e.getFrame() == this) {
 			fetcher.stop();
-		} else {
-			close();
 		}
 	}
 
@@ -181,10 +196,10 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
-		if (view.cell != null) {
+		if (!parent.isRunningHeadless() && (view.cell != null)) {
 			Loader.load(view.cell.getFile());
+			close();
 		}
-		close();
 	}
 
 	@Override
