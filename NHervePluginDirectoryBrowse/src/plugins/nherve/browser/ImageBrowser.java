@@ -49,11 +49,12 @@ import plugins.nherve.browser.viewer.ImageViewerParent;
 import plugins.nherve.toolbox.NherveToolbox;
 import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.GridPanel;
+import plugins.nherve.toolbox.plugin.HeadlessReadyComponent;
 import plugins.nherve.toolbox.plugin.HelpWindow;
 import plugins.nherve.toolbox.plugin.PluginHelper;
 import plugins.nherve.toolbox.plugin.SingletonPlugin;
 
-public class ImageBrowser extends SingletonPlugin implements ActionListener, DocumentListener, ImageViewerParent {
+public class ImageBrowser extends SingletonPlugin implements ActionListener, DocumentListener, HeadlessReadyComponent {
 	private class InternalFileFilter implements FileFilter {
 		private boolean recurse;
 

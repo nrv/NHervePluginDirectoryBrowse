@@ -44,6 +44,7 @@ import plugins.nherve.browser.CacheThumbnailProvider;
 import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.SomeStandardThumbnails;
 import plugins.nherve.toolbox.image.toolboxes.SomeImageTools;
+import plugins.nherve.toolbox.plugin.HeadlessReadyComponent;
 import plugins.nherve.toolbox.plugin.MyFrame;
 
 public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreFetcherListener, MouseWheelListener, MouseListener, ComponentListener {
@@ -79,9 +80,9 @@ public class ImageViewer extends IcyFrame implements IcyFrameListener, ImagePreF
 
 	private View view;
 	private ImagePreFetcher fetcher;
-	private ImageViewerParent parent;
+	private HeadlessReadyComponent parent;
 
-	public ImageViewer(GridCellCollection<BrowsedImage> images, CacheThumbnailProvider provider, ImageViewerParent parent) {
+	public ImageViewer(GridCellCollection<BrowsedImage> images, CacheThumbnailProvider provider, HeadlessReadyComponent parent) {
 		super();
 
 		this.parent = parent;
