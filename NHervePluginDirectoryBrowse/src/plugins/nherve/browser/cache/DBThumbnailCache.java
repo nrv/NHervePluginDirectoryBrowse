@@ -85,7 +85,7 @@ public class DBThumbnailCache extends Algorithm implements ThumbnailCache {
 		try {
 			int mo = (int) (wrap.tableSize() / MEGAOCTET);
 			return "(" + mo + " Mo)";
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			return "(not available)";
 		}
 	}
