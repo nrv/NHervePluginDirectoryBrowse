@@ -45,7 +45,6 @@ import javax.swing.event.DocumentListener;
 
 import plugins.nherve.browser.cache.CacheException;
 import plugins.nherve.browser.viewer.ImageViewer;
-import plugins.nherve.browser.viewer.ImageViewerParent;
 import plugins.nherve.toolbox.NherveToolbox;
 import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.GridPanel;
@@ -222,11 +221,13 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		File[] files = root.listFiles(new InternalFileFilter(recurse));
 		ArrayList<File> result = new ArrayList<File>();
 
-		for (File f : files) {
-			if (recurse && f.isDirectory()) {
-				result.addAll(getFiles(f, recurse));
-			} else {
-				result.add(f);
+		if (files != null) {
+			for (File f : files) {
+				if (recurse && f.isDirectory()) {
+					result.addAll(getFiles(f, recurse));
+				} else {
+					result.add(f);
+				}
 			}
 		}
 
@@ -283,14 +284,14 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		if (viewer != null) {
 			viewer.close();
 		}
-		
+
 		igp.setCells(null);
 		igp = null;
 		provider.close();
 	}
 
 	private void updateDirectoryView() {
-		
+
 		provider.setUseCache(cbUseCache.isSelected());
 
 		if (cbUseCache.isSelected()) {
@@ -325,7 +326,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 
 		igp.setCells(images);
-		
+
 		if (viewer != null) {
 			viewer.close();
 		}
