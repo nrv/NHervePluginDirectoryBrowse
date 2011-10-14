@@ -62,4 +62,9 @@ public class DerbyDBWrapper extends DBWrapper {
 	@Override
 	protected void preDisconnect() throws SQLException {
 	}
+
+	@Override
+	public String getName() throws SQLException {
+		return "Derby";
+	}
 }

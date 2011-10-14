@@ -32,7 +32,7 @@ public class H2DBWrapper extends DBWrapper {
 	
 	@Override
 	protected String getUrl() {
-		return URL + getDbDirectory() + getDbName();
+		return URL + getDbDirectory() + "/" + getDbName();
 	}
 
 	@Override
@@ -52,6 +52,11 @@ public class H2DBWrapper extends DBWrapper {
 
 	@Override
 	protected void preDisconnect() throws SQLException {
+	}
+
+	@Override
+	public String getName() throws SQLException {
+		return "H2";
 	}
 
 

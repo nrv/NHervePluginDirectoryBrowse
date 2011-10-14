@@ -79,7 +79,9 @@ public abstract class DBWrapper extends Algorithm {
 		try {
 			preConnect();
 			
+			log("["+getName()+"] Looking for class " + getDriver());
 			Class.forName(getDriver());
+			log("["+getName()+"] URL : " + getUrl());
 			conn = DriverManager.getConnection(getUrl());
 			if (!tableExists()) {
 				tableCreate();
@@ -150,6 +152,8 @@ public abstract class DBWrapper extends Algorithm {
 		}
 	}
 
+	public abstract String getName() throws SQLException;
+	
 	protected abstract void preDisconnect() throws SQLException;
 	
 	protected abstract void postDisconnect() throws SQLException;

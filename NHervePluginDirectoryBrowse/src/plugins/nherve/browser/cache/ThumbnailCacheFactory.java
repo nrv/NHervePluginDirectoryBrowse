@@ -34,11 +34,11 @@ public class ThumbnailCacheFactory {
 		try {
 			cache = getH2DBCache();
 		} catch (CacheException e1) {
-			System.out.println("[ThumbnailCacheFactory] Unable to find H2 JDBC drivers");
+			System.out.println("[ThumbnailCacheFactory] Unable to find H2 JDBC drivers ("+e1.getMessage()+")");
 			try {
 				cache = getDerbyDBCache();
 			} catch (CacheException e2) {
-				System.out.println("[ThumbnailCacheFactory] Unable to find Apache Derby JDBC drivers");
+				System.out.println("[ThumbnailCacheFactory] Unable to find Apache Derby JDBC drivers ("+e2.getMessage()+")");
 				cache = getDiskCache();
 			}
 		}
