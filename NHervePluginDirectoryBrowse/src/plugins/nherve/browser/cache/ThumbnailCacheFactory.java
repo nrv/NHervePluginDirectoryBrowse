@@ -20,6 +20,7 @@
 package plugins.nherve.browser.cache;
 
 import plugins.nherve.browser.cache.DBWrapper.DBType;
+import plugins.nherve.toolbox.Algorithm;
 
 public class ThumbnailCacheFactory {
 	private final static String CACHE_NAME = "ImageBrowser";
@@ -34,11 +35,11 @@ public class ThumbnailCacheFactory {
 		try {
 			cache = getH2DBCache();
 		} catch (CacheException e1) {
-			System.out.println("[ThumbnailCacheFactory] Unable to find H2 JDBC drivers ("+e1.getMessage()+")");
+			Algorithm.out("[ThumbnailCacheFactory] Unable to find H2 JDBC drivers ("+e1.getMessage()+")");
 			try {
 				cache = getDerbyDBCache();
 			} catch (CacheException e2) {
-				System.out.println("[ThumbnailCacheFactory] Unable to find Apache Derby JDBC drivers ("+e2.getMessage()+")");
+				Algorithm.out("[ThumbnailCacheFactory] Unable to find Apache Derby JDBC drivers ("+e2.getMessage()+")");
 				cache = getDiskCache();
 			}
 		}

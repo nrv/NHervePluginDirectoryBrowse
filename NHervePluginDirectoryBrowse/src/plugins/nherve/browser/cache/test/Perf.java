@@ -33,6 +33,7 @@ import plugins.nherve.browser.cache.DiskThumbnailCache;
 import plugins.nherve.browser.cache.ThumbnailCache;
 import plugins.nherve.browser.cache.DBWrapper.DBType;
 import plugins.nherve.browser.cache.ThumbnailCacheFactory;
+import plugins.nherve.toolbox.Algorithm;
 import plugins.nherve.toolbox.genericgrid.ThumbnailException;
 
 public class Perf {
@@ -114,7 +115,7 @@ public class Perf {
 	}
 
 	private void log(String msg) {
-		System.out.println("[Perf] " + msg);
+		Algorithm.out("[Perf] " + msg);
 	}
 
 	private void createDataset(File dir) {

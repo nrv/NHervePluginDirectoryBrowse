@@ -28,6 +28,7 @@ import javax.imageio.ImageIO;
 
 import plugins.nherve.browser.cache.DBWrapper;
 import plugins.nherve.browser.cache.DBWrapper.DBType;
+import plugins.nherve.toolbox.Algorithm;
 import plugins.nherve.toolbox.HashToolbox;
 
 public class Main {
@@ -44,7 +45,7 @@ public class Main {
 		try {
 			db.connect();
 			db.tableExists();
-			System.out.println("Size : " + db.tableSize());
+			Algorithm.out("Size : " + db.tableSize());
 			
 			db.tableClear();
 			
@@ -53,11 +54,11 @@ public class Main {
 			
 			db.insert(hash, bi);
 			
-			System.out.println("Size : " + db.tableSize());
+			Algorithm.out("Size : " + db.tableSize());
 			
 			BufferedImage img = db.select(hash);
 			
-			System.out.println("Image info : " + img.getWidth() + " x " + img.getHeight());
+			Algorithm.out("Image info : " + img.getWidth() + " x " + img.getHeight());
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
