@@ -253,6 +253,27 @@ public abstract class DBWrapper extends Algorithm {
 			}
 		}
 	}
+	
+	public long tableCount() throws SQLException {
+		Statement s = null;
+		ResultSet r = null;
+		try {
+			s = conn.createStatement();
+			r = s.executeQuery("select count(*) from " + getTableName());
+			long sz = 0;
+			if (r.next()) {
+				sz = r.getLong(1);
+			}
+			return sz;
+		} finally {
+			if (r != null) {
+				r.close();
+			}
+			if (s != null) {
+				s.close();
+			}
+		}
+	}
 
 	
 }
