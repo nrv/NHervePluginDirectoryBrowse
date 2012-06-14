@@ -68,7 +68,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 	}
 
-	private final static String VERSION = "1.2.1.1";
+	private final static String VERSION = "1.3.0.0";
 
 	private final static String INPUT_PREFERENCES_NODE = "directory";
 	private final static String ZOOM = "zoom";
