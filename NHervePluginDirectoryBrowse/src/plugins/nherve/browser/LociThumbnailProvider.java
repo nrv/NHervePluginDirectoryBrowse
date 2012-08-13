@@ -19,20 +19,22 @@
 
 package plugins.nherve.browser;
 
+import icy.file.Loader;
+import icy.image.IcyBufferedImage;
+
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import loci.formats.FormatException;
 import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.MinimalTiffReader;
-import loci.formats.in.TiffReader;
 import plugins.nherve.toolbox.genericgrid.ThumbnailException;
 
 public class LociThumbnailProvider extends DefaultCacheAndResizeThumbnailProvider {
 	public LociThumbnailProvider(boolean doResize, int preferedSize) {
 		super(doResize, preferedSize);
 	}
-	
+
 	protected void populateSuffixes() {
 		addSupportedSuffix("tif");
 		addSupportedSuffix("jpg");
@@ -50,12 +52,26 @@ public class LociThumbnailProvider extends DefaultCacheAndResizeThumbnailProvide
 		BufferedImageReader reader = null;
 		try {
 			if (cell.getSuffix().equalsIgnoreCase("TIF") || cell.getSuffix().equalsIgnoreCase("TIFF")) {
-				reader = new BufferedImageReader(new MinimalTiffReader());	
+				reader = new BufferedImageReader(new MinimalTiffReader());
 			} else {
 				reader = new BufferedImageReader();
 			}
 			reader.setId(cell.getFile().getAbsolutePath());
-			return reader.openImage(0);
+			int nbChan = reader.getRGBChannelCount();
+			int pixelType = reader.getPixelType();
+			// System.out.println(cell.getFile().getAbsolutePath() +
+			// " : nbChan " + nbChan + " - pixelType " + pixelType);
+			if ((pixelType != 1) && (nbChan != 3)) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+				}
+				reader = null;
+				IcyBufferedImage img = Loader.loadImage(cell.getFile());
+				return img.getARGBImage();
+			} else {
+				return reader.openImage(0);
+			}
 		} catch (FormatException e) {
 			throw new ThumbnailException(e);
 		} catch (IOException e) {

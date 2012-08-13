@@ -32,12 +32,12 @@ import plugins.nherve.toolbox.genericgrid.ThumbnailException;
 import plugins.nherve.toolbox.image.toolboxes.SomeImageTools;
 
 public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThumbnailProvider<BrowsedImage> implements CacheThumbnailProvider {
+	private ThumbnailCache cache;
+	private boolean cacheReady;
 	private boolean doResize;
 	private int preferedSize;
-	private boolean cacheReady;
-	private boolean useCache;
-	private ThumbnailCache cache;
 	private Map<String, String> suffixes;
+	private boolean useCache;
 
 	public DefaultCacheAndResizeThumbnailProvider(boolean doResize, int preferedSize) {
 		super();
