@@ -105,7 +105,9 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		HELP += "<ul><li>left click : open the image in Icy</li>";
 		HELP += "<li>right click : open the image viewer that allows you to navigate quickly between the directory images with the mouse scroll</li></ul></p>";
 		HELP += "<p>Take care when using the recursive mode, it may browse your full hard drive if launched from the root ! When activating this mode, you have to click on the refresh button.</p>";
-		HELP += "<hr/>" + "<p>" + HelpWindow.getTagPluginName() + NherveToolbox.getLicenceHtml() + "</p>" + "<p>" + NherveToolbox.getLicenceHtmllink() + "</p>" + "</html>";
+		HELP += "<hr/>" + "<p>" + HelpWindow.getTagPluginName() + NherveToolbox.getLicenceHtml() + "</p>" + "<p>" + NherveToolbox.getLicenceHtmllink() + "</p>";
+		HELP += "<hr/><p>Icons come from the Symbolize Icon Set published by <a href=\"http://dryicons.com\">DryIcons</a></p>";
+		HELP += "</html>";
 	}
 
 	public final static String NAME_INPUT_DIR = "Browse";
@@ -117,6 +119,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	private JButton btInputDir;
 	private JButton btRefresh;
 	private JButton btHelp;
+	private JButton btDeleteFilter;
 
 	private JCheckBox cbUseCache;
 	private JCheckBox cbRecurse;
@@ -164,6 +167,11 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 			if (b == btHelp) {
 				openHelpWindow(HELP, 400, 500);
+				return;
+			}
+			
+			if (b == btDeleteFilter) {
+				tfFilterNames.setText(null);
 				return;
 			}
 
@@ -216,6 +224,10 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		btClearCache = new JButton(NherveToolbox.diTrashIcon);
 		btClearCache.setToolTipText("Clear cache");
 		btClearCache.addActionListener(this);
+		
+		btDeleteFilter = new JButton(NherveToolbox.diDeleteIcon);
+		btDeleteFilter.setToolTipText("Clear filter");
+		btDeleteFilter.addActionListener(this);
 
 		lbCache = new JLabel(provider.getCacheSizeInfo());
 
@@ -250,7 +262,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		btHelp.setToolTipText("Informations");
 		btHelp.addActionListener(this);
 
-		mainPanel.add(GuiUtil.createLineBoxPanel(btClearCache, cbUseCache, lbCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir, cbRecurse, Box.createHorizontalGlue(), tfFilterNames, Box.createHorizontalGlue(), btHelp));
+		mainPanel.add(GuiUtil.createLineBoxPanel(btClearCache, cbUseCache, lbCache, Box.createHorizontalGlue(), btRefresh, Box.createHorizontalGlue(), btInputDir, tfInputDir, cbRecurse, Box.createHorizontalGlue(), tfFilterNames, btDeleteFilter, Box.createHorizontalGlue(), btHelp));
 
 		igp = new GridPanel<BrowsedImage>(useZoom);
 		mainPanel.add(igp);
@@ -373,7 +385,10 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 						regex += "(.*)";
 					}
 					pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+					preferences.put(FILTER, filter);
 					tfFilterNames.setBackground(Color.GREEN);
+				} else {
+					tfFilterNames.setBackground(null);
 				}
 				files = getFiles(workingDirectory, cbRecurse.isSelected(), pattern);
 			} catch (PatternSyntaxException e) {
