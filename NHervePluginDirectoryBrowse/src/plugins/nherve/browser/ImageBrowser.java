@@ -23,6 +23,7 @@ package plugins.nherve.browser;
 import icy.gui.frame.IcyFrameEvent;
 import icy.gui.util.GuiUtil;
 import icy.preferences.XMLPreferences;
+import icy.system.thread.ThreadUtil;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -84,14 +85,14 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 	}
 
-	private final static String VERSION = "1.4.0.0";
+	private final static String VERSION = "1.4.1.0";
 
 	private final static String INPUT_PREFERENCES_NODE = "directory";
 	private final static String FILTER = "filter";
 	private final static String ZOOM = "zoom";
 	private final static String CACHE = "cache";
 
-	private static String HELP = "<html>"; 
+	private static String HELP = "<html>";
 	{
 		HELP += "<p align=\"center\"><b>" + HelpWindow.getTagFullPluginName() + "</b></p>" + "<p align=\"center\"><b>" + NherveToolbox.getDevNameHtml() + "</b></p>" + "<p align=\"center\"><a href=\"http://www.herve.name/pmwiki.php/Main/ImageBrowser\">Online help is available</a></p>" + "<p align=\"center\"><b>" + NherveToolbox.getCopyrightHtml() + "</b></p>" + "<hr/>";
 		HELP += "<p>This plugin helps you to browse your directories with image thumbnails. It uses an internal cache to avoid the thumbnails computation each time a directory is displayed. It is highly recommended to keep the cache option enabled. If you find that the cache space used on your hard drive is too big, you can still clear it.</p>";
@@ -157,7 +158,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			if (b == btRefresh) {
 				try {
 					enableWaitingCursor();
-					updateDirectoryView();
+					updateDirectoryViewPart1();
 					lbCache.setText(provider.getCacheSizeInfo());
 				} finally {
 					disableWaitingCursor();
@@ -169,7 +170,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 				openHelpWindow(HELP, 400, 500);
 				return;
 			}
-			
+
 			if (b == btDeleteFilter) {
 				tfFilterNames.setText(null);
 				return;
@@ -197,12 +198,12 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 		tfInputDir.getDocument().addDocumentListener(this);
 		tfFilterNames.getDocument().addDocumentListener(this);
-		updateDirectoryView();
+		updateDirectoryViewPart1();
 	}
 
 	@Override
 	public void changedUpdate(DocumentEvent e) {
-		updateDirectoryView();
+		updateDirectoryViewPart1();
 	}
 
 	@Override
@@ -224,7 +225,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		btClearCache = new JButton(NherveToolbox.diTrashIcon);
 		btClearCache.setToolTipText("Clear cache");
 		btClearCache.addActionListener(this);
-		
+
 		btDeleteFilter = new JButton(NherveToolbox.diDeleteIcon);
 		btDeleteFilter.setToolTipText("Clear filter");
 		btDeleteFilter.addActionListener(this);
@@ -307,12 +308,12 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 	@Override
 	public void insertUpdate(DocumentEvent e) {
-		updateDirectoryView();
+		updateDirectoryViewPart1();
 	}
 
 	@Override
 	public void removeUpdate(DocumentEvent e) {
-		updateDirectoryView();
+		updateDirectoryViewPart1();
 	}
 
 	public void removeViewer() {
@@ -352,8 +353,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		provider.close();
 	}
 
-	private void updateDirectoryView() {
-
+	private void updateDirectoryViewPart1() {
 		provider.setUseCache(cbUseCache.isSelected());
 
 		if (cbUseCache.isSelected()) {
@@ -369,12 +369,12 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		if (workingDirectory.exists() && workingDirectory.isDirectory()) {
 			tfInputDir.setBackground(Color.GREEN);
 			preferences.node(INPUT_PREFERENCES_NODE).put(PluginHelper.PATH, workingDirectory.getAbsolutePath());
-			List<File> files = null;	
-			enableWaitingCursor();
-			
+
+			Pattern pattern = null;
+
 			try {
 				String filter = tfFilterNames.getText();
-				Pattern pattern = null;
+				preferences.put(FILTER, filter);
 				if ((filter != null) && (filter.length() > 0)) {
 					String regex = "";
 					if (!filter.startsWith("^")) {
@@ -385,29 +385,58 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 						regex += "(.*)";
 					}
 					pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-					preferences.put(FILTER, filter);
 					tfFilterNames.setBackground(Color.GREEN);
 				} else {
 					tfFilterNames.setBackground(null);
 				}
-				files = getFiles(workingDirectory, cbRecurse.isSelected(), pattern);
+
 			} catch (PatternSyntaxException e) {
 				tfFilterNames.setBackground(Color.RED);
+				preferences.put(FILTER, "");
+				pattern = null;
 			}
-			
-			disableWaitingCursor();
-			if ((files != null) && (files.size() > 0)) {
-				images = new GridCellCollection<BrowsedImage>(provider);
-				Collections.sort(files);
-				for (File f : files) {
-					BrowsedImage ig = new BrowsedImage(f, workingDirectory, this);
-					images.add(ig);
+
+			final Pattern pattern2 = pattern;
+			igp.setCells(null);
+			ThreadUtil.bgRun(new Runnable() {
+				@Override
+				public void run() {
+					updateDirectoryViewPart2(pattern2);
 				}
-			} else {
-				images = null;
-			}
+			});
+
 		} else {
 			tfInputDir.setBackground(Color.RED);
+			images = null;
+
+			igp.setCells(images);
+
+			if (viewer != null) {
+				viewer.close();
+			}
+		}
+	}
+
+	private void updateDirectoryViewPart2(Pattern pattern) {
+		final List<File> files = getFiles(workingDirectory, cbRecurse.isSelected(), pattern);
+
+		ThreadUtil.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				updateDirectoryViewPart3(files);
+			}
+		});
+	}
+
+	private void updateDirectoryViewPart3(List<File> files) {
+		if ((files != null) && (files.size() > 0)) {
+			images = new GridCellCollection<BrowsedImage>(provider);
+			Collections.sort(files);
+			for (File f : files) {
+				BrowsedImage ig = new BrowsedImage(f, workingDirectory, ImageBrowser.this);
+				images.add(ig);
+			}
+		} else {
 			images = null;
 		}
 
