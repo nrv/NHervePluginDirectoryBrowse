@@ -91,7 +91,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 	}
 
-	private final static String VERSION = "1.4.1.1";
+	private final static String VERSION = "1.4.1.2";
 
 	private final static String INPUT_PREFERENCES_NODE = "directory";
 	private final static String FILTER = "filter";
@@ -447,6 +447,9 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 
 		igp.setWaitingAnimation(false);
+		
+		igp.repaint();
+		
 		igp.setCells(images);
 
 		if (viewer != null) {
