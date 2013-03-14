@@ -1,6 +1,6 @@
 /*
  * Copyright 2011 Institut Pasteur.
- * Copyright 2012 Nicolas Hervé.
+ * Copyright 2012, 2013 Nicolas Hervé.
  * 
  * This file is part of Image Browser, which is an ICY plugin.
  * 
@@ -48,11 +48,17 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.pushingpixels.substance.api.DecorationAreaType;
+import org.pushingpixels.substance.api.SubstanceColorScheme;
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.SubstanceSkin;
+
 import plugins.nherve.browser.cache.CacheException;
 import plugins.nherve.browser.viewer.ImageViewer;
 import plugins.nherve.toolbox.NherveToolbox;
 import plugins.nherve.toolbox.genericgrid.GridCellCollection;
 import plugins.nherve.toolbox.genericgrid.GridPanel;
+import plugins.nherve.toolbox.genericgrid.WaitingAnimation;
 import plugins.nherve.toolbox.plugin.HeadlessReadyComponent;
 import plugins.nherve.toolbox.plugin.HelpWindow;
 import plugins.nherve.toolbox.plugin.PluginHelper;
@@ -85,7 +91,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 		}
 	}
 
-	private final static String VERSION = "1.4.1.0";
+	private final static String VERSION = "1.4.1.1";
 
 	private final static String INPUT_PREFERENCES_NODE = "directory";
 	private final static String FILTER = "filter";
@@ -280,7 +286,6 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 	}
 
 	private List<File> getFiles(File root, boolean recurse, Pattern pattern) {
-
 		File[] files = root.listFiles(new InternalFileFilter(recurse, pattern));
 		ArrayList<File> result = new ArrayList<File>();
 
@@ -398,6 +403,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 
 			final Pattern pattern2 = pattern;
 			igp.setCells(null);
+			igp.setWaitingAnimation(true);
 			ThreadUtil.bgRun(new Runnable() {
 				@Override
 				public void run() {
@@ -440,6 +446,7 @@ public class ImageBrowser extends SingletonPlugin implements ActionListener, Doc
 			images = null;
 		}
 
+		igp.setWaitingAnimation(false);
 		igp.setCells(images);
 
 		if (viewer != null) {
