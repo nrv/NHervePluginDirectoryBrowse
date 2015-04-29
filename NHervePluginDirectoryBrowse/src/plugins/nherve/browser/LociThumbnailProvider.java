@@ -19,6 +19,7 @@
 
 package plugins.nherve.browser;
 
+import icy.common.exception.UnsupportedFormatException;
 import icy.file.Loader;
 import icy.image.IcyBufferedImage;
 
@@ -75,6 +76,8 @@ public class LociThumbnailProvider extends DefaultCacheAndResizeThumbnailProvide
 		} catch (FormatException e) {
 			throw new ThumbnailException(e);
 		} catch (IOException e) {
+			throw new ThumbnailException(e);
+		} catch (UnsupportedFormatException e) {
 			throw new ThumbnailException(e);
 		} finally {
 			try {
