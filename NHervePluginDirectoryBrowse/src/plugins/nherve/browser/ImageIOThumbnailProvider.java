@@ -92,7 +92,7 @@ public class ImageIOThumbnailProvider extends DefaultCacheAndResizeThumbnailProv
 			return reader.read(0, p);
 
 		} catch (IOException e) {
-			logError("Unable to open file " + cell.getFile().getName() + " : " + e.getClass().getName() + " - " + e.getMessage());
+			error("Unable to open file " + cell.getFile().getName() + " : " + e.getClass().getName() + " - " + e.getMessage());
 			//e.printStackTrace();
 			throw new ThumbnailException(e);
 		} finally {

@@ -79,9 +79,9 @@ public abstract class DBWrapper extends Algorithm {
 		try {
 			preConnect();
 			
-			log("["+getName()+"] Looking for class " + getDriver());
+			info("["+getName()+"] Looking for class " + getDriver());
 			Class.forName(getDriver());
-			log("["+getName()+"] URL : " + getUrl());
+			info("["+getName()+"] URL : " + getUrl());
 			conn = DriverManager.getConnection(getUrl());
 			if (!tableExists()) {
 				tableCreate();
@@ -195,7 +195,7 @@ public abstract class DBWrapper extends Algorithm {
 	public void tableClear() throws SQLException {
 		Statement s = null;
 		try {
-			log("[DBWrapper] clearing everything");
+			info("[DBWrapper] clearing everything");
 			s = conn.createStatement();
 			s.execute("truncate table " + getTableName());
 		} finally {
@@ -208,7 +208,7 @@ public abstract class DBWrapper extends Algorithm {
 	public void tableCreate() throws SQLException {
 		Statement s = null;
 		try {
-			log("[DBWrapper] creating table structure");
+			info("[DBWrapper] creating table structure");
 			s = conn.createStatement();
 			s.execute("create table " + getTableName() + "(hash varchar(32) not null primary key, thumb blob(16M))");
 		} finally {

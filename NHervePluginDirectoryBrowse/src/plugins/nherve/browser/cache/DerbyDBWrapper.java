@@ -40,7 +40,7 @@ public class DerbyDBWrapper extends DBWrapper {
 
 	@Override
 	protected void postConnect() throws SQLException {
-		log("[DerbyDBWrapper] using directory : " + getDbDirectory());
+		info("[DerbyDBWrapper] using directory : " + getDbDirectory());
 	}
 
 	@Override

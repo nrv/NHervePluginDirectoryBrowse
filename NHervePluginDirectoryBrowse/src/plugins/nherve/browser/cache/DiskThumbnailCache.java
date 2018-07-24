@@ -65,7 +65,7 @@ public class DiskThumbnailCache extends Algorithm implements ThumbnailCache {
 		try {
 			return ImageIO.read(f);
 		} catch (Exception e) {
-			logError("Unable to open cached file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
+			error("Unable to open cached file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
 			return null;
 		}
 	}
@@ -92,7 +92,7 @@ public class DiskThumbnailCache extends Algorithm implements ThumbnailCache {
 
 		cacheDirectory.mkdirs();
 		
-		log("[DiskThumbnailCache] using directory : " + cacheDirectory);
+		info("[DiskThumbnailCache] using directory : " + cacheDirectory);
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class DiskThumbnailCache extends Algorithm implements ThumbnailCache {
 			try {
 				ImageIO.write(bi, "JPG", f);
 			} catch (Exception e) {
-				logError("Unable to write cached file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
+				error("Unable to write cached file for " + s + " (" + f.getName() + ") " + e.getClass().getName() + " : " + e.getMessage());
 			}
 		}
 	}

@@ -37,7 +37,7 @@ public class H2DBWrapper extends DBWrapper {
 
 	@Override
 	protected void postConnect() throws SQLException {
-		log("[H2DBWrapper] using directory : " + getDbDirectory());
+		info("[H2DBWrapper] using directory : " + getDbDirectory());
 	}
 	
 	@Override

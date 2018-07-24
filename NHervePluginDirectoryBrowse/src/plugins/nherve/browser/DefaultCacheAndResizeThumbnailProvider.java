@@ -118,7 +118,7 @@ public abstract class DefaultCacheAndResizeThumbnailProvider extends DefaultThum
 				try {
 					bi = cache.get(cell.getHashKey());
 					if (bi == null) {
-						log(cache.getClass().getName() + " is missing " + cell.getName());
+						info(cache.getClass().getName() + " is missing " + cell.getName());
 						bi = getResizedThumbnail(cell);
 						cache.store(cell.getHashKey(), bi);
 					}
